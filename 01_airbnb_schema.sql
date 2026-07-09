@@ -111,3 +111,10 @@ reviewer_id INT,
 CONSTRAINT pk_fact_reviews PRIMARY KEY (id),
 CONSTRAINT fk_reviews_listings FOREIGN KEY (listing_id) REFERENCES Dim_Listings(id)
 )
+
+-- Forgot to add the exploded amenities bridge table! 
+
+CREATE TABLE Amenities_Bridge (
+    listing_id INT,
+    amenity_name VARCHAR(255)
+);

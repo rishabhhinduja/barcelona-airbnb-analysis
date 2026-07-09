@@ -68,9 +68,20 @@ GO
 
 BULK INSERT Fact_Reviews
 FROM 'D:\Airbnb Project\cleaned_data\fact_reviews_clean.csv'
-WITH (
+WITH(
     FORMAT = 'CSV',
     FIRSTROW = 2,
     FIELDTERMINATOR = ',',
     ROWTERMINATOR = '\n'
-)
+    )
+
+GO 
+
+BULK INSERT Amenities_Bridge
+FROM 'D:\Airbnb Project\amenities.csv'
+WITH(
+    FORMAT = 'CSV',
+    FIRSTROW = 2,
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n'
+    )
