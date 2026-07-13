@@ -1,50 +1,82 @@
 # 🏘️ Barcelona Airbnb: End-to-End Market Analytics & Data Engineering Pipeline
 
 ## 📌 Project Overview
-This project is an end-to-end data engineering and analytics pipeline designed to process, model, and analyze 16 years of short-term rental market data from Airbnb Barcelona. The primary objective is to transform raw, heavily nested, and unstructured datasets into a Kimball-compliant Star/Snowflake schema, enabling advanced temporal and financial analysis of real estate assets, host consolidation, and market trends.
+This project is an end-to-end data engineering and analytics pipeline designed to process, model, and analyze 13 years of short-term rental market data from Airbnb Barcelona. The primary objective is to transform raw, highly fragmented datasets into a clean data warehouse architecture and an interactive Executive Dashboard that uncovers temporal trends, host consolidation, and asset performance.
 
-*(Note: The data engineering, ETL, and SQL modeling phases are complete. The Power BI Presentation layer is currently in development).*
+## 📊 Executive Dashboard Analytics
+The final analytical presentation layer delivers interactive business intelligence directly to stakeholders:
+
+![Executive Dashboard](assets/dashboard_part1.png)
+* **Executive Summary:** Tracks high-level KPIs (Total Hosts, Listings, and Bookings), highlighting a significant historical growth phase peaking around 2021–2022.
+* **Listing Density vs. Average Bookings:** Features a crosshair threshold scatter plot to instantly isolate market outliers—identifying neighborhoods with high property counts but low booking velocity.
+
+![Property Performance & Seasonality Dashboard](assets/dashboard_part2.png)
+* **Monthly Booking Seasonality:** Isolates tourism peaks (May–October) against winter drops, enabling data-driven dynamic pricing insights.
+* **Four-Dimensional Bubble Analysis:** Tracks guest capacity, room type, booking volume, and average booking performance simultaneously within a single visual engine.
+
+---
 
 ## 🛠️ Tech Stack & Tools
 * **Languages:** Python (Pandas, NumPy), T-SQL
-* **Database:** Microsoft SQL Server
-* **Visualization (EDA):** Plotly
-* **Methodology:** Dimensional Modeling (Star/Snowflake Schema), ETL/ELT pipeline design
+* **Database Engine:** Microsoft SQL Server
+* **Visualization & Analytics:** Power BI (Desktop), Plotly (Python)
+* **Methodology:** Dimensional Modeling (Star Schema), Agile Post-Mortem Auditing
 
 ---
 
-## 🏗️ Architecture & Engineering Workflow
+## 🏗️ Pipeline Architecture & Folder Structure
 
-### Phase 1: Python ETL & Visual EDA
-* **Data Wrangling:** Processed raw CSV datasets using `pandas`, handling missing values, standardizing datatypes, and formatting strings.
-* **Outlier Detection:** Utilized `plotly` to build interactive box plots, identifying severe skews in listing prices and review counts to inform downstream SQL filters.
-* **JSON Explosion:** Engineered custom Python logic to parse and explode nested JSON arrays (e.g., property amenities), flattening them into a 440,000-row relational bridge dataset for granular market filtering.
+The repository files are systematically organized into sequential stages reflecting a true data engineering lifecycle:
 
-### Phase 2: Enterprise Database Architecture
-* **Schema Design:** Designed and deployed the DDL scripts to create a relational architecture in SQL Server.
-* **Data Integrity:** Enforced primary and foreign key constraints, deliberately upgrading specific columns to `BIGINT` to prevent arithmetic overflow from Airbnb's massive ID structures.
-* **Bulk Load Pipeline:** Executed efficient bulk insert scripts to load hundreds of thousands of rows from the Python-cleaned flat files directly into the data warehouse.
+```text
+├── 01_data_preprocessing/      # Raw Data Preprocessing & Python EDA
+│   ├── clean_calendar.ipynb
+│   ├── cleaned_listings.ipynb
+│   └── cleaned_reviews.ipynb
+├── 02_data_warehouse/          # Core Database Architecture & Schema Creation
+│   ├── 01_airbnb_schema.sql
+│   ├── 02_bulk_load_warehouse.sql
+│   ├── 03_generate_date_dimension.sql
+│   └── schema_upgrades_and_composite_key_fixes.sql
+├── 03_analytics_and_eda/       # Downstream Analytical Views & Advanced SQL
+│   ├── 01_Exploratory_Data_Analysis.ipynb
+│   └── 02_Advanced SQL EDA.sql
+├── assets/                     # Dashboard Screen Captures & Visual Artifacts
+│   ├── dashboard_part1.png
+│   └── dashboard_part2.png
+├── .gitignore
+├── .gitattributes
+└── README.md
+```
 
-### Phase 3: Dimensional Modeling & Feature Engineering (Advanced SQL)
-* **Dynamic Time Intelligence:** Engineered a T-SQL Stored Procedure to auto-generate a continuous 20-year Date Dimension, enabling robust Year-over-Year (YoY) comparative analysis without relying on static external files.
-* **Algorithmic Churn Modeling:** Designed an advanced Common Table Expression (CTE) using `DATEDIFF` logic to calculate the precise historical lifespan of properties, dynamically categorizing them as "Active," "Low Performing," or "Dead" based on transaction gaps.
-* **Dimensional Conforming:** Transformed and melted wide, unstructured review categories into a lean metrics table (`Property_Category_Scores`) optimized for front-end visual performance.
+### Phase 1: Python ETL & Exploratory Data Analysis (`01_data_preprocessing/`)
+* **Data Wrangling:** Cleaned data structures, managed missing fields, and cast foundational datatypes in Pandas.
+* **Visual Profiling:** Built interactive Plotly box plots to detect extreme outliers in property pricing, establishing baseline filters for the downstream database engine.
+* **Relational Flattening:** Parsed, exploded, and melted unstructured components (such as amenities) to isolate granular dimensions.
 
-### Phase 4: The Presentation Layer
-* **Financial Proxy Modeling:** Deployed `vw_fact_reviews` to bake a 70% review-to-booking mathematical proxy directly into the server layer, locking down estimated revenue calculations as a single source of truth.
-* **Data Marts:** Created final presentation-layer views (`vw_dim_property`, `vw_dim_host`) to consolidate business logic, safely handle bidirectional filter traps in Snowflake schemas, and prepare the dataset for direct VertiPaq engine ingestion.
+### Phase 2: Enterprise Database Architecture (`02_data_warehouse/`)
+* **Schema Enforcement:** Deployed DDL scripts creating a relational layout while upgrading key indices to `BIGINT` to proactively prevent numerical overflow errors.
+* **Bulk Loading:** Managed high-volume native bulk insert operations to translate Pandas outputs straight into Microsoft SQL Server.
+* **Dynamic Time Intelligence:** Programmed a T-SQL stored procedure generating a continuous 20-year date reference matrix, bypassing reliance on external static lookup datasets.
+
+### Phase 3: Analytical Modeling & Feature Engineering (`03_analytics_and_eda/`)
+* **Algorithmic Churn Engine:** Designed an advanced Common Table Expression (CTE) utilizing timestamp delta gaps (`DATEDIFF`) to calculate historical listing activity, classifying assets dynamically into distinct operational health buckets.
+* **Business Logic Proxies:** Due to a lack of explicit financial transactional figures or explicit user reviews scores, engineered an analytical proxy using review dates—applying a 70% review-to-booking baseline formula to accurately simulate historical market revenue floors.
 
 ---
 
-## 📊 Key Business Insights (SQL EDA)
-Before moving to the visualization tool, advanced SQL querying revealed the following market realities:
+## 🛠️ Project Post-Mortem & Architectural Retrospective
 
-1. **Market Consolidation:** A single Mega-Host manages over 270 properties, driving an estimated baseline revenue of over 13 Million through strategic asset placement.
-2. **Neighborhood Dominance:** The Eixample district holds the highest transaction density, capturing over 660,000 estimated bookings and a minimum revenue floor of 344 Million over a 15-year period.
-3. **Property Optimization:** "Entire rental units" vastly outperform private or shared rooms, driving the overwhelming majority of market volume (1 Million+ estimated bookings) and representing the most lucrative asset class.
+This project served as an intensive learning laboratory. While the final reporting engine outputs flawless visual assets, navigating the construction process exposed critical architectural bottlenecks. Below is an autopsy of the structural mistakes made and the lessons applied:
 
----
+### 1. Data Profiling Failure vs. Blind Execution
+*   **The Mistake:** I invested substantial processing overhead cleaning a 6-million-row calendar dataset without first mapping its historical constraints against the primary review timeline. It ultimately revealed a tight 2-year window that misaligned with the broader 13-year project scope, making it completely redundant.
+*   **The Lesson:** Never spend engineering energy writing ETL components before executing a complete chronological and structural profile of the raw ingestion source.
 
-## 🚀 Next Steps
-* **Power BI Integration:** Connect the optimized SQL views to Power BI.
-* **Dashboard Development:** Build an executive-level interactive dashboard to visualize market concentration, property health statuses, and geographic revenue heatmaps.
+### 2. The Over-Normalization Relational Trap
+*   **The Mistake:** I aggressively over-normalized the backend datasets, splitting three flat files into eight heavily fragmented tables via rigid DDL constraints. While highly efficient for traditional transaction logging (3NF), it introduced unnecessary data-model complexity and heavy join penalties when swallowed by Power BI's internal VertiPaq engine.
+*   **The Lesson:** Analytical engines perform optimal columnar scanning when consuming wide, denormalized dimensions arranged in a flattened **Star Schema**, rather than highly normalized transactional architectures.
+
+### 3. Static Assumptions on Time-Variant Attributes
+*   **The Mistake:** Advanced SQL revenue formulas initially treated room pricing and minimum stay policies as immutable constants, entirely ignoring real-world market inflation, local seasonality shifts, and price elasticity over time.
+*   **The Lesson:** Historical financial reporting models must incorporate **Slowly Changing Dimension (SCD Type 2)** architectures to properly capture snapshot-in-time metrics instead of evaluating historical records against current data definitions.
